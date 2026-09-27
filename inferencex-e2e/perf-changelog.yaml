@@ -8995,3 +8995,15 @@
     - "Validate MiniMax-M3 AgentX on H200 with vLLM FP8 after moving the end-to-end project into inferencex-e2e/. Preserve the existing image, recipe, and benchmark settings."
     - "将端到端项目迁入 inferencex-e2e/ 后，验证 H200 上的 vLLM FP8 MiniMax-M3 AgentX 运行路径，沿用现有镜像、配方和基准测试设置。"
   pr-link: https://github.com/SemiAnalysisAI/InferenceX/pull/3525
+
+- config-keys:
+    - glm5.2-fp4-gb300-dynamo-sglang-agentic-agg
+    - glm5.2-fp4-gb300-dynamo-sglang-agentic-disagg
+  scenario-type:
+    - agentic-coding
+  description:
+    - "Disable FP8 conversion of the GLM-5.2 NextN/MTP draft MoE on GB300 AgentX so the draft runs at its shipped precision; images, topology, workload and acceptance are unchanged."
+    - "Disaggregated prefill and decode use the 1800 s scheduler watchdog of the GLM-5.2 B200/GB200 recipes instead of the 300 s default."
+    - "关闭 GB300 GLM-5.2 AgentX 对 NextN/MTP draft MoE 的 FP8 转换，使 draft 保持原始发布精度；镜像、拓扑、工作负载和验收不变。"
+    - "分离式 prefill 和 decode 采用 GLM-5.2 B200/GB200 配方的 1800 秒调度 watchdog，替代默认 300 秒。"
+  pr-link: https://github.com/SemiAnalysisAI/InferenceX/pull/3402
