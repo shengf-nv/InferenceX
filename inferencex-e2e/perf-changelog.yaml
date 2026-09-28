@@ -9008,4 +9008,4 @@
     - glm5.1-fp8-b200-tilert
   description:
     - "Port B200 GLM-5.1 TileRT 1k1k and 8k1k to native srt-slurm per-role engines."
-  pr-link: TBD
+  pr-link: https://github.com/SemiAnalysisAI/InferenceX/pull/3553
