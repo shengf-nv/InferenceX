@@ -192,17 +192,17 @@ Concurrent cells serialize draft staging with a per-model lock. Each cell lets
 `hf download` validate or resume the existing cache before serving; a nonempty
 directory is not a completion signal.
 
-## Native TileRT power
+## TileRT on B200
 
 TileRT's shared importer preserves Docker Hub image names and converts explicit registries such as `ghcr.io/team/image:tag` to Enroot's `docker://ghcr.io#team/image:tag` syntax. Existing `#` references are preserved. Valid cached squash images are reused without importing; a cache hit does not validate the registry import path. Invalid cached images are removed under the import lock before retrying the import.
 
 The GLM-5.1 B200 Nscale 1k1k and 8k1k recipes select the prepared shared checkpoint, converted TileRT weights and squash cache, with allocation limits of 45 minutes for 1k1k and 90 minutes for 8k1k, including its full GSM8K eval. Since C1 is below automatic eval selection, use the PR `all-evals` label alongside `full-sweep-fail-fast` for full qualification. TileRT was added after the general GLM-5.1 retirement in [#2533](https://github.com/SemiAnalysisAI/InferenceX/pull/2533); [MODELS.md](MODELS.md) records this retained scope. Changes still require the normal PR sweep, applicable quality evidence, sign-off and reuse before publication.
 
-TileRT's eval wrapper calls the shared `run_eval` dispatcher without overriding its `run_lm_eval` client. It stages available artifacts after evaluation and preserves failures from either evaluation or staging. TCP readiness probes keep their socket inside a subshell and preserve the caller's diagnostic streams.
+The recipes use vLLM prefill, TileRT decode, and the TileRT router through srt-slurm. The shared `srt_fixed_sequence.sh` runs the benchmark; `srt_eval.sh` handles selected evaluations. srt-slurm owns worker startup, readiness, and teardown.
 
-For GLM-5.1 on B200 Nscale, `MODEL_PATH` can select an existing shared checkpoint instead of the default `/scratch/models/GLM-5.1-FP8`. When it selects an HF snapshot, also set `HF_HUB_CACHE_HOST_PATH` to the existing cache root; TileRT mounts that root at the same absolute path so snapshot links to sibling blobs remain readable. Keep `TILERT_WEIGHTS_DIR` pointed at the separately converted decode weights.
+`MODEL_PATH` selects the shared checkpoint. The launcher mounts its HF cache at the same absolute path so snapshot links to sibling blobs remain readable. `TILERT_WEIGHTS_DIR` selects the separately converted decode weights, mounted at `/tilert_weights`.
 
-Only fixed 8192/1024 `glm5.1-fp8-b200-tilert` requires native power. TileRT runs inside its returned `salloc` allocation, retains both role exit codes and drains collectors before staging audits. Exactly one physical node per role is supported. Other sequence lengths, AgentX and eval-only do not enable this collector. Hardware qualification and publication remain pending.
+The 8k1k recipe requires srt-slurm DCGM telemetry on both worker nodes. The 1k1k recipe does not require power collection. Both recipes allocate one node per role. Hardware qualification and publication remain pending.
 
 ## Register an srt-slurm recipe
 
