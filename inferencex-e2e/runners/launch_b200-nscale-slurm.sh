@@ -30,9 +30,6 @@ export AIPERF_MMAP_CACHE_HOST_PATH="/data/home/sa-shared/gharunners/aiperf-cache
 
 uses_native_srt_lane() {
     [[ "$IS_MULTINODE" == "true" ]] || return 1
-    if [[ "$FRAMEWORK" == "tilert" && "${IS_AGENTIC}" != "1" ]]; then
-        return 1
-    fi
     case "${MODEL_PREFIX}/${PRECISION}" in
         dsv4/fp4|kimik3/fp4|glm5.2/fp4) ;;
         glm5.1/fp8) [[ "$FRAMEWORK" == "tilert" ]] || return 1 ;;
@@ -266,7 +263,7 @@ run_native_srt_lane() {
         "$PRECISION" != "fp4" ||
         ( "$MODEL_PREFIX" == "dsv4" && "$FRAMEWORK" != "dynamo-sglang" && "$FRAMEWORK" != "dynamo-vllm" ) ||
         "$MODEL_PREFIX" != "dsv4"
-    ) ]]; then
+    ) && "$FRAMEWORK" != tilert ]]; then
         echo "Error: B200 nscale dcgm-power requires a supported fixed-sequence lane or Kimi-K3 AgentX vLLM" >&2
         exit 1
     fi
@@ -303,12 +300,11 @@ run_native_srt_lane() {
     PREFILL_SQUASH_FILE=""
     SRT_CLUSTER_ARGS=()
     if [[ $FRAMEWORK == "tilert" ]]; then
-        : "${PREFILL_IMAGE:?PREFILL_IMAGE is required for TileRT prefill}"
+        check_env_vars PREFILL_IMAGE
         PREFILL_SQUASH_FILE="$SQUASH_DIR/$(echo "$PREFILL_IMAGE" | sed 's/[\/:@#]/_/g').sqsh"
         import_squash "$PREFILL_SQUASH_FILE" "$PREFILL_IMAGE" || exit 1
         SRT_CLUSTER_ARGS+=(
-            --container tilert-decode "$SQUASH_FILE"
-            --container tilert-prefill "$PREFILL_SQUASH_FILE"
+            --container "$PREFILL_IMAGE" "$PREFILL_SQUASH_FILE"
         )
     fi
 
@@ -335,11 +331,11 @@ run_native_srt_lane() {
         )
     fi
     if [[ $FRAMEWORK == "tilert" ]]; then
-        TILERT_WEIGHTS_HOST_PATH="/data/home/sa-shared/gharunners/tilert-cache"
-        mkdir -p "$TILERT_WEIGHTS_HOST_PATH"
+        check_env_vars TILERT_WEIGHTS_DIR
+        mkdir -p "$TILERT_WEIGHTS_DIR"
         SRT_CLUSTER_ARGS+=(
-            --mount "$GITHUB_WORKSPACE" /infmax-workspace
-            --mount "$TILERT_WEIGHTS_HOST_PATH" "$TILERT_WEIGHTS_HOST_PATH"
+            --mount "$TILERT_WEIGHTS_DIR" /tilert_weights
+            --mount "$HF_HUB_CACHE_HOST_PATH" "$HF_HUB_CACHE_HOST_PATH"
         )
     fi
 
@@ -512,21 +508,6 @@ run_native_srt_lane() {
 # ---------------------------------------------------------------------------
 
 run_multinode_srt() {
-    if [[ "$FRAMEWORK" == "tilert" ]]; then
-        export SLURM_PARTITION SLURM_ACCOUNT
-        check_env_vars TILERT_WEIGHTS_DIR
-        # Nscale exposes eight RoCE HCAs, mlx5_0..mlx5_7.
-        check_env_vars UCX_NET_DEVICES
-        check_env_vars UCX_MEMTYPE_CACHE
-        check_env_vars UCX_MEMTYPE_REG_WHOLE
-        TILERT_SUBDIR="multi_node"
-        [[ "${SCENARIO_SUBDIR}" == "agentic/" ]] && TILERT_SUBDIR="multi_node/agentic"
-        TILERT_DISAGG="$GITHUB_WORKSPACE/benchmarks/${TILERT_SUBDIR}/${EXP_NAME%%_*}_${PRECISION}_b200_${FRAMEWORK}-disagg.sh"
-        [[ -f "$TILERT_DISAGG" ]] || { echo "tilert disagg script not found: $TILERT_DISAGG"; exit 1; }
-        exec bash "$TILERT_DISAGG"
-        exit 1
-    fi
-
     if [[ $FRAMEWORK != "dynamo-sglang" && $FRAMEWORK != "dynamo-trt" && $FRAMEWORK != "dynamo-vllm" ]]; then
         echo "Unsupported framework: $FRAMEWORK. Supported frameworks are: dynamo-trt, dynamo-sglang, dynamo-vllm"
         exit 1

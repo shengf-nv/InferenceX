@@ -21,7 +21,6 @@ case "${RUNNER_NAME%%_*}" in
             glm5.2) export MODEL_PATH=/scratch/models/GLM-5.2-NVFP4 ;;
         esac
         if [[ "$FRAMEWORK" == tilert ]]; then
-            export TILERT_WEIGHTS_DIR="/scratch/models/${MODEL_PREFIX}-${PRECISION}-tilert-8shard"
             export UCX_NET_DEVICES=mlx5_0:1,mlx5_1:1,mlx5_2:1,mlx5_3:1,mlx5_4:1,mlx5_5:1,mlx5_6:1,mlx5_7:1
             export UCX_MEMTYPE_CACHE=n UCX_MEMTYPE_REG_WHOLE=n
         fi

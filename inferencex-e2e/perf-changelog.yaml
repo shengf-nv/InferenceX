@@ -9003,3 +9003,9 @@
   description:
     - "Update B300 vLLM AgentX to DSpark6 on a new image with a sampled concurrency grid and per-mode --kv-cache-memory-bytes pins."
   pr-link: https://github.com/SemiAnalysisAI/InferenceX/pull/3477
+
+- config-keys:
+    - glm5.1-fp8-b200-tilert
+  description:
+    - "Port B200 GLM-5.1 TileRT 1k1k and 8k1k to native srt-slurm per-role engines."
+  pr-link: TBD
