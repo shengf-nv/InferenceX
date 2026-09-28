@@ -187,7 +187,11 @@ setup_srt_slurm "$SRT_REPO_DIR" "$FRAMEWORK" "$USES_DCGM_POWER" || exit 1
 # compiled kernels. The recipes' setup script aborts the job if this tree is
 # missing. Drop this block, the setup script, and the recipes' PYTHONPATH once
 # the change ships in the pinned image.
-if [[ "$IS_AGENTIC" == "1" && "$FRAMEWORK" == "dynamo-sglang" && "$MODEL_PREFIX" == "dsv4" ]]; then
+# Only the disaggregated recipe imports the reviewed branch and uses the
+# Mooncake store; the aggregated dsv4 recipe has no prefill/decode roles for the
+# device list to target.
+if [[ "$IS_AGENTIC" == "1" && "$FRAMEWORK" == "dynamo-sglang" &&
+      "${CONFIG_FILE%%:*}" == */dsv4/sglang/gb300-fp4/agentx/disagg-variants.yaml ]]; then
     SGLANG_MOONCAKE_OPT_URL="https://github.com/weireweire/sglang.git"
     SGLANG_MOONCAKE_OPT_PIN="7b18eddd006a0166c5d092dfb399ca7d136494fc"
     git init configs/sglang-mooncake-opt || exit 1
