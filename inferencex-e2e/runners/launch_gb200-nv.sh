@@ -171,6 +171,11 @@ if [[ $FRAMEWORK == "dynamo-sglang" ]]; then
     elif [[ $MODEL_PREFIX == "dsr1" && $PRECISION == "fp4" ]]; then
         export MODEL_PATH="/mnt/lustre01/models/deepseek-r1-0528-fp4-v2/"
         export SRT_SLURM_MODEL_PREFIX="dsr1-fp4"
+    elif [[ $MODEL_PREFIX == "dsv4" && $PRECISION == "fp4" && $MODEL == "deepseek-ai/DeepSeek-V4-Pro-0813" ]]; then
+        # The -0813 checkpoint includes the DSpark draft head. Its alias must
+        # match model.path in the recipe, not the plain DeepSeek-V4-Pro weights.
+        export MODEL_PATH="/mnt/lustre01/models/DeepSeek-V4-Pro-0813"
+        export SRT_SLURM_MODEL_PREFIX="deepseek-v4-pro-0813"
     elif [[ $MODEL_PREFIX == "dsv4" && $PRECISION == "fp4" ]]; then
         export MODEL_PATH="/mnt/lustre01/models/deepseek-v4-pro"
         export SRT_SLURM_MODEL_PREFIX="deepseek-v4-pro"
@@ -237,9 +242,11 @@ uses_watchtower_shared_fs() {
     case "$MODEL_PREFIX" in
         minimaxm3|kimik3|qwen3.5|glm5.2) return 0 ;;
     esac
-    # dsv4 multinode runs only under dynamo-vllm on watchtower, where the runner
-    # home is not cross-mounted to compute nodes.
-    [[ "$FRAMEWORK" == "dynamo-vllm" && "$MODEL_PREFIX" == "dsv4" ]] && return 0
+    # DSV4 jobs need the checkout and outputs on a compute-visible filesystem.
+    if [[ "$MODEL_PREFIX" == "dsv4" ]]; then
+        [[ "$FRAMEWORK" == "dynamo-vllm" ]] && return 0
+        [[ "$FRAMEWORK" == "dynamo-sglang" && "$IS_AGENTIC" == "1" ]] && return 0
+    fi
     return 1
 }
 
