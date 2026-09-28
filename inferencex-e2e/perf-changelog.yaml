@@ -9013,4 +9013,4 @@
     - "Keep the stock exporter image, 100 ms watch interval, 1 s scrape interval, 2 s timeout, and strict power validation unchanged."
     - "Kimi-K3 H200 latency 功耗遥测改用无 profiling 的 DCGM counters，避免同步恢复 profiling watch 导致采样卡顿；保留功耗和 GPU 利用率，省略 profiling 指标。"
     - "保持原 exporter 镜像、100 ms watch 间隔、1 s 抓取间隔、2 s 超时与严格功耗校验不变。"
-  pr-link: TBD
+  pr-link: https://github.com/SemiAnalysisAI/InferenceX/pull/3550
