@@ -332,7 +332,10 @@ run_native_srt_lane() {
     fi
     if [[ $FRAMEWORK == "tilert" ]]; then
         check_env_vars TILERT_WEIGHTS_DIR
-        mkdir -p "$TILERT_WEIGHTS_DIR"
+        if [[ ! -r "$TILERT_WEIGHTS_DIR/model.safetensors.index.json" ]]; then
+            echo "Missing prepared TileRT checkpoint: $TILERT_WEIGHTS_DIR" >&2
+            exit 1
+        fi
         SRT_CLUSTER_ARGS+=(
             --mount "$TILERT_WEIGHTS_DIR" /tilert_weights
             --mount "$HF_HUB_CACHE_HOST_PATH" "$HF_HUB_CACHE_HOST_PATH"

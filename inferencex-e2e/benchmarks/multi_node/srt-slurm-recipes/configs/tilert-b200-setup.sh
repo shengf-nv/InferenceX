@@ -27,23 +27,3 @@ case "$TILERT_ROLE" in
         exit 1
         ;;
 esac
-
-if [[ "$TILERT_ROLE" == decode ]]; then
-    # Keep the shared converted checkpoint reusable across allocations.
-    mkdir -p /tilert_weights
-    exec 9>/tilert_weights/.convert.lock
-    flock -w 21600 9
-    if [[ ! -f /tilert_weights/model.safetensors.index.json ]]; then
-        python3 -m tilert.models.preprocess.weight_converter \
-            --model_type glm-5 --model_dir /model --save_dir /tilert_weights
-        test -f /tilert_weights/model.safetensors.index.json
-    fi
-    for file in /model/*; do
-        [[ -f "$file" ]] || continue
-        name="${file##*/}"
-        [[ "$name" == *.safetensors || "$name" == model.safetensors.index.json ]] && continue
-        [[ -e "/tilert_weights/$name" ]] || cp -p "$file" "/tilert_weights/$name"
-    done
-    test -f /tilert_weights/chat_template.jinja
-    test -f /tilert_weights/tokenizer_config.json || test -f /tilert_weights/tokenizer.json
-fi
