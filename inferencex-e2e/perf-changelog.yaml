@@ -9003,3 +9003,17 @@
   description:
     - "Update B300 vLLM AgentX to DSpark6 on a new image with a sampled concurrency grid and per-mode --kv-cache-memory-bytes pins."
   pr-link: https://github.com/SemiAnalysisAI/InferenceX/pull/3477
+
+- config-keys:
+    - dsv4-fp4-b300-dynamo-sglang-agentic-agg
+    - dsv4-fp4-b300-dynamo-sglang-agentic-disagg
+  scenario-type:
+    - agentic-coding
+  description:
+    - "Add DeepSeek-V4-Pro-0813 FP4 B300 Dynamo+SGLang AgentX aggregate TP8 c1 and TP4 c4/c8 recipes, plus disaggregated 1P1D DEP8 c240 and 2P1D DEP8 c480 recipes, under the refactored inferencex-e2e project layout."
+    - "Use EFA 1.50.0 with mooncake-transfer-engine-efa-cuda13 0.3.13.post1 on cluster:b300-dsxe; rely on the matching Pyxis-provided libfabric ABI without FI_* or LD_LIBRARY_PATH overrides."
+    - "Use 192 logical CPUs per task, HiCache ratio 3, decode max-running-requests at twice concurrency, persistent AgentX/Hugging Face caches, and exclude the known degraded DSXE nodes."
+    - "在重构后的 inferencex-e2e 项目布局中新增 DeepSeek-V4-Pro-0813 FP4 B300 Dynamo+SGLang AgentX 配方：聚合式 TP8 c1、TP4 c4/c8，以及分离式 1P1D DEP8 c240 和 2P1D DEP8 c480。"
+    - "在 cluster:b300-dsxe 上使用 EFA 1.50.0 与 mooncake-transfer-engine-efa-cuda13 0.3.13.post1；依赖 Pyxis 提供且 ABI 匹配的 libfabric，不设置 FI_* 或 LD_LIBRARY_PATH 覆盖。"
+    - "每任务使用 192 个逻辑 CPU、HiCache 比例 3，decode 的 max-running-requests 为并发数两倍，挂载持久化 AgentX/Hugging Face 缓存，并排除已知异常 DSXE 节点。"
+  pr-link: https://github.com/SemiAnalysisAI/InferenceX/pull/3190
