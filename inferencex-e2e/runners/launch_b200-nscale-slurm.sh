@@ -338,7 +338,6 @@ run_native_srt_lane() {
         fi
         SRT_CLUSTER_ARGS+=(
             --mount "$TILERT_WEIGHTS_DIR" /tilert_weights
-            --mount "$HF_HUB_CACHE_HOST_PATH" "$HF_HUB_CACHE_HOST_PATH"
         )
     fi
 

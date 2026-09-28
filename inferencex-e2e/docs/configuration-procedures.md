@@ -200,7 +200,7 @@ The GLM-5.1 B200 Nscale 1k1k and 8k1k recipes select the prepared shared checkpo
 
 The recipes use vLLM prefill, TileRT decode, and the TileRT router through srt-slurm. The shared `srt_fixed_sequence.sh` runs the benchmark; `srt_eval.sh` handles selected evaluations. srt-slurm owns worker startup, readiness, and teardown.
 
-`MODEL_PATH` selects the shared checkpoint. The launcher mounts its HF cache at the same absolute path so snapshot links to sibling blobs remain readable. `TILERT_WEIGHTS_DIR` selects the separately converted decode weights, mounted at `/tilert_weights`.
+`MODEL_PATH` selects the prepared checkpoint on shared model storage, mounted at `/model`. It must not contain relative symlinks outside that directory. `TILERT_WEIGHTS_DIR` selects the separately converted decode weights, mounted at `/tilert_weights`. Recipe setup scripts only install dependencies; checkpoint preparation happens before benchmark submission.
 
 The 8k1k recipe requires srt-slurm DCGM telemetry on both worker nodes. The 1k1k recipe does not require power collection. Both recipes allocate one node per role. Hardware qualification and publication remain pending.
 
