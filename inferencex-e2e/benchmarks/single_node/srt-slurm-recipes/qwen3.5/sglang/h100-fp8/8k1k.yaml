@@ -2,12 +2,17 @@ base:
   schema: 2
   name: qwen3.5-fp8-h100-sglang-8k1k
   model:
-    path: hf:Qwen/Qwen3.5-397B-A17B-FP8
+    path: hf:Qwen/Qwen3-30B-A3B
     container: lmsysorg/sglang:v0.5.14-cu130
     precision: fp8
   resources:
     gpu_type: h100
     gpus_per_node: 8
+  profiling:
+    type: torch
+    aggregated:
+      start_step: 5
+      stop_step: 10
   frontend:
     type: sglang
     enable_multiple_frontends: false
@@ -34,7 +39,7 @@ base:
         context-length: 9236
         kv-cache-dtype: fp8_e4m3
         quantization: fp8
-        attention-backend: flashinfer
+        attention-backend: triton
         stream-interval: 50
         tokenizer-worker-num: 6
         mamba-ssm-dtype: bfloat16
@@ -44,33 +49,33 @@ base:
         scheduler-recv-interval: 2
         data-parallel-size: 1
         expert-parallel-size: 1
-        served-model-name: Qwen/Qwen3.5-397B-A17B-FP8
+        served-model-name: Qwen/Qwen3-30B-A3B
         enable-metrics: false
+        weight-loader-prefetch-checkpoints: true
+        weight-loader-prefetch-num-threads: 16
   benchmark:
-    type: custom
-    command: bash /infmax-workspace/benchmarks/single_node/srt_fixed_sequence.sh
-    env:
-      MODEL: Qwen/Qwen3.5-397B-A17B-FP8
-      ISL: '8192'
-      OSL: '1024'
-      RANDOM_RANGE_RATIO: '0.8'
-      USE_CHAT_TEMPLATE: 'false'
-zip_override_tp8_ep1:
-  roles:
-    agg:
-      args:
-        cuda-graph-max-bs: [1, 2, 4, 8]
-        scheduler-recv-interval: [2, 2, 2, 60]
-  benchmark:
-    env:
-      CONC: ['1', '2', '4', '8']
+    type: "sa-bench"
+    isl: 128
+    osl: 128
+    concurrencies: "4"
+# zip_override_tp8_ep1:
+#   roles:
+#     agg:
+#       args:
+#         cuda-graph-max-bs: [1]
+#         scheduler-recv-interval: [2]
+#   benchmark:
+#    concurrencies: "1"
 zip_override_tp8_ep8:
   roles:
     agg:
+      env:
+        NVSHMEM_DISABLE_GDRCOPY: "1"
       args:
-        cuda-graph-max-bs: [16, 32, 64, 128, 256]
+        cuda-graph-max-bs: 16
         expert-parallel-size: 8
-        scheduler-recv-interval: [30, 1200, 600, 1920, 1920]
+        moe-a2a-backend: deepep
+        deepep-mode: [normal]
+        scheduler-recv-interval: [2]
   benchmark:
-    env:
-      CONC: ['16', '32', '64', '128', '256']
+    concurrencies: "4"
