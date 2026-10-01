@@ -75,7 +75,7 @@ zip_override_tp8_ep8:
         cuda-graph-max-bs: 16
         expert-parallel-size: 8
         moe-a2a-backend: deepep
-        deepep-mode: [normal]
+        deepep-mode: [auto]
         scheduler-recv-interval: [2]
   benchmark:
     concurrencies: "4"
