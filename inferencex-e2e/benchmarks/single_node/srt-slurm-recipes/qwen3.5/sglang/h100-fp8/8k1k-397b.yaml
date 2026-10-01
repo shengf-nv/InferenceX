@@ -1,0 +1,116 @@
+base:
+  schema: 2
+  name: qwen3.5-fp8-h100-sglang-dynamo-disagg-8k1k
+  model:
+    path: hf:Qwen/Qwen3.5-397B-A17B-FP8
+    container: lmsysorg/sglang:v0.5.14-cu130
+    precision: fp8
+  resources:
+    gpu_type: h100
+    gpus_per_node: 8
+  dynamo:
+    source:
+      pypi: "1.4.2"
+  profiling:
+    type: torch
+    prefill:
+      start_step: 5
+      stop_step: 10
+    decode:
+      start_step: 5
+      stop_step: 10
+  frontend:
+    type: dynamo
+    enable_multiple_frontends: false
+  observability:
+    enabled: false
+    tachometer:
+      enabled: false
+  engine: sglang
+  roles:
+    prefill:
+      nodes: 1
+      workers: 1
+      gpus: 8
+      args:
+        tensor-parallel-size: 8
+        data-parallel-size: 1
+        expert-parallel-size: 1
+        reasoning-parser: qwen3
+        tool-call-parser: qwen3_coder
+        enable-flashinfer-allreduce-fusion: true
+        max-running-requests: 256
+        chunked-prefill-size: 16384
+        decode-log-interval: 1
+        mem-fraction-static: 0.8
+        context-length: 9236
+        kv-cache-dtype: fp8_e4m3
+        quantization: fp8
+        attention-backend: triton
+        mamba-ssm-dtype: bfloat16
+        disable-radix-cache: true
+        enable-symm-mem: true
+        trust-remote-code: true
+        scheduler-recv-interval: 2
+        served-model-name: Qwen/Qwen3.5-397B-A17B-FP8
+        enable-metrics: false
+        weight-loader-prefetch-checkpoints: true
+        weight-loader-prefetch-num-threads: 16
+        disaggregation-transfer-backend: nixl
+    decode:
+      nodes: 1
+      workers: 1
+      gpus: 8
+      args:
+        tensor-parallel-size: 8
+        data-parallel-size: 1
+        expert-parallel-size: 1
+        reasoning-parser: qwen3
+        tool-call-parser: qwen3_coder
+        enable-flashinfer-allreduce-fusion: true
+        max-running-requests: 256
+        decode-log-interval: 1
+        mem-fraction-static: 0.8
+        cuda-graph-max-bs: 1
+        context-length: 9236
+        kv-cache-dtype: fp8_e4m3
+        quantization: fp8
+        attention-backend: triton
+        stream-interval: 50
+        mamba-ssm-dtype: bfloat16
+        disable-radix-cache: true
+        enable-symm-mem: true
+        trust-remote-code: true
+        scheduler-recv-interval: 2
+        served-model-name: Qwen/Qwen3.5-397B-A17B-FP8
+        enable-metrics: false
+        weight-loader-prefetch-checkpoints: true
+        weight-loader-prefetch-num-threads: 16
+        disaggregation-transfer-backend: nixl
+  benchmark:
+    type: "sa-bench"
+    isl: 128
+    osl: 128
+    concurrencies: "4"
+
+zip_override_tp8_ep8:
+  roles:
+    prefill:
+      env:
+        NVSHMEM_DISABLE_GDRCOPY: "1"
+      args:
+        expert-parallel-size: 8
+        moe-a2a-backend: deepep
+        deepep-mode: [auto]
+        scheduler-recv-interval: [2]
+    decode:
+      env:
+        NVSHMEM_DISABLE_GDRCOPY: "1"
+      args:
+        cuda-graph-max-bs: 16
+        expert-parallel-size: 8
+        moe-a2a-backend: deepep
+        deepep-mode: [auto]
+        scheduler-recv-interval: [2]
+  benchmark:
+    concurrencies: "4"
